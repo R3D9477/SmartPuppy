@@ -1,0 +1,8 @@
+[Unit]
+Description=Puppy
+After=network.target
+[Service]
+Type=simple
+ExecStart=/puppy/puppy.sh
+[Install]
+WantedBy=network.target
