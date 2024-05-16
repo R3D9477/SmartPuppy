@@ -15,5 +15,6 @@
 * [Premeow](https://youtu.be/BQHvQeVuEAM)
 * [Premeow](https://youtu.be/YYXCfZBw_u8)
 * [Premeow](https://youtu.be/q7R_qfXywDI)
+* [Premeow](https://youtube.com/shorts/04foKYChFuE?feature=share)
 
 original project is [AI-RPi-detection](https://github.com/ykhli/AI-RPi-detection)

@@ -1,3 +1,4 @@
 .directory
 install_configured.sh
 test
+puppy_env.sh

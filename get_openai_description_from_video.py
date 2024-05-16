@@ -1,36 +1,53 @@
-import sys, os
+import sys, os, io
 import base64
 import cv2
-from openai import OpenAI
+import numpy as np
+from PIL import Image
+from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from langchain_core.messages import HumanMessage
 
+#--------------------------------------------------------------------------------------------------
+
+llm = ChatOpenAI(api_key=os.environ['PUPPY_OPENAI_API_KEY'], model="gpt-4-vision-preview", max_tokens=1000)
+system_prompt=os.environ['PUPPY_OPENAI_SYSTEM_PROMPT']
+
+#--------------------------------------------------------------------------------------------------
+
+base64_frames = None
+
+frame_index=0
+frames_count=0
 video = cv2.VideoCapture(sys.argv[1])
-
-base64_frames = []
-while video.isOpened():
+while video.isOpened() and frames_count < 25:
     success, frame = video.read()
     if not success:
         break
-    _, buffer = cv2.imencode(".jpg", frame)
-    base64_frames.append(base64.b64encode(buffer).decode("utf-8"))
-
+    if frame_index == 0:
+        width, height, _ = frame.shape
+        if width > 1280 or height > 720:
+            frame = cv2.resize(frame, (1280, 720))
+        base64_frames = frame if base64_frames is None else np.hstack((base64_frames, frame))
+        frames_count=frames_count+1
+    frame_index=frame_index+1
+    if frame_index == 50:
+        frame_index = 0
 video.release()
 
-PROMPT_MESSAGES = [
-    {
-        "role": "user",
-        "content": [
-            os.environ['PUPPY_OPENAI_SYSTEM_PROMPT'],
-            *map(lambda x: {"image": x, "resize": 768}, base64_frames[0::50]),
-        ],
-    },
-]
-params = {
-    "model": "gpt-4-vision-preview",
-    "messages": PROMPT_MESSAGES,
-    "max_tokens": 200,
-}
+#--------------------------------------------------------------------------------------------------
 
-client = OpenAI(api_key=os.environ['PUPPY_OPENAI_API_KEY'])
-result = client.chat.completions.create(**params)
+img = Image.fromarray(base64_frames)
+img_byte_arr = io.BytesIO()
+img.save(img_byte_arr, format="JPEG")
+img_base64 = base64.b64encode(img_byte_arr.getvalue()).decode("utf-8")
 
-print(result.choices[0].message.content)
+ai_response = llm.invoke(
+    [HumanMessage(
+        content = [
+            {"type": "text", "text": system_prompt},
+            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_base64}"}}
+        ]
+    )]
+)
+
+print(ai_response.content)

@@ -14,24 +14,22 @@ system_prompt=os.environ['PUPPY_OPENAI_SYSTEM_PROMPT']
 
 #--------------------------------------------------------------------------------------------------
 
+base64_frames = None
+
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
-
-#--------------------------------------------------------------------------------------------------
-
-base64_frames = None
 
 for jpgfile in sys.argv[1:]:
     jpg_as_np = np.frombuffer(base64.b64decode(encode_image(jpgfile)), dtype=np.uint8)
     frame = cv2.imdecode(jpg_as_np, flags=1)
     base64_frames = frame if base64_frames is None else np.hstack((base64_frames, frame))
 
-img = Image.fromarray(base64_frames)
+#--------------------------------------------------------------------------------------------------
 
+img = Image.fromarray(base64_frames)
 img_byte_arr = io.BytesIO()
 img.save(img_byte_arr, format="JPEG")
-
 img_base64 = base64.b64encode(img_byte_arr.getvalue()).decode("utf-8")
 
 ai_response = llm.invoke(

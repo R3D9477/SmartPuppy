@@ -21,13 +21,13 @@ while true ; do
 
             for V_FILE in $(ls *.h264) ; do
                 AI_DESCR=$(python "/puppy/get_openai_description_from_video.py" ${W_FILES})
-                if   [ "${PUPPY_SPEECH_GENERATOR}" == "openai" ]  ; then SPEECH_FILE=$(python "/puppy/get_openai_speech_file.py" "${AI_DESCR}" ${V_FILE})
-                elif [ "${PUPPY_SPEECH_GENERATOR}" == "pyttsx3" ] ; then SPEECH_FILE=$(python "/puppy/create_speech_file.py" "${AI_DESCR}" ${V_FILE})
+                if   [ "${PUPPY_SPEECH_GENERATOR}" == "openai" ]  ; then SPEECH_FILE=$(python "/puppy/get_openai_speech_file.py" ${V_FILE} "${AI_DESCR}")
+                elif [ "${PUPPY_SPEECH_GENERATOR}" == "pyttsx3" ] ; then SPEECH_FILE=$(python "/puppy/create_speech_file.py" ${V_FILE} "${AI_DESCR}")
                 fi
                 if [[ -f "${SPEECH_FILE}" ]] ; then
-                    if ffmpeg -i "${V_FILE}" -i "${SPEECH_FILE}" -c copy "${V_FILE}.mp4" -y ; then
-                        rm "${V_FILE}"
-                        rm "${SPEECH_FILE}"
+                    if ffmpeg -i "${V_FILE}" -i "${SPEECH_FILE}" -c copy -map 0 -map -0:a -map 1:a "${V_FILE}.mp4" -y ; then
+                        rm ${V_FILE}
+                        rm ${SPEECH_FILE}
                         V_FILE="${V_FILE}.mp4"
                     fi
                 fi
