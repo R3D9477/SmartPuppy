@@ -1,6 +1,5 @@
 #!/bin/bash
-
-echo "$(date) Puppy start clean..." >> /puppy/puppy.log
+/puppy/puppy_log.sh "[${0}]"
 source /puppy/puppy_env.sh
 
 mkdir -p /puppy/Videos

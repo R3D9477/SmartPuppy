@@ -23,6 +23,9 @@ def encode_image(image_path):
 for jpgfile in sys.argv[1:]:
     jpg_as_np = np.frombuffer(base64.b64decode(encode_image(jpgfile)), dtype=np.uint8)
     frame = cv2.imdecode(jpg_as_np, flags=1)
+    width, height, _ = frame.shape
+    if width > 1280 or height > 720:
+        frame = cv2.resize(frame, (1280, 720))
     base64_frames = frame if base64_frames is None else np.hstack((base64_frames, frame))
 
 #--------------------------------------------------------------------------------------------------

@@ -1,61 +1,92 @@
 #!/bin/bash
-
-echo "$(date) Puppy connect..." >> /puppy/puppy.log
+/puppy/puppy_log.sh "[${0}]"
 source /puppy/puppy_env.sh
 
-if [[ $(curl -Is "https://www.google.com" | head -n 1) =~ "200" ]] ; then
-    echo "$(date) Puppy already connected..." >> /puppy/puppy.log
+if /puppy/puppy_is_connected.sh ; then
     exit 0
 fi
 
+PUPPY_CONNECT_LOCK=$(realpath ~/.puppy_connect.lock)
+
+if [ -f "${PUPPY_CONNECT_LOCK}" ] ; then
+    for i in $(seq 1 10) ; do
+        sleep 1s
+        if /puppy/puppy_is_connected.sh ; then
+            exit 0
+        elif ! [ -f "${PUPPY_CONNECT_LOCK}" ] ; then
+            break
+        elif [[ $i -eq 10 ]] ; then
+            exit 1
+        fi
+    done
+fi
+
+touch "${PUPPY_CONNECT_LOCK}"
+/puppy/puppy_log.sh "Puppy connect [start]"
+
 if [ "$(nmcli radio wifi)" != "enabled" ] ; then
-    nmcli radio wifi on
-    sleep 1s
+    nmcli -w 5 radio wifi on
+    sleep 3s
 fi
 
 if [ "$(nmcli radio wifi)" != "enabled" ] ; then
-    echo "$(date) Puppy try to restart NetworkManager service..." >> /puppy/puppy.log
+    /puppy/puppy_log.sh "Puppy try to restart NetworkManager service..."
     service NetworkManager stop
     sleep 3s
     service NetworkManager restart
     sleep 3s
-    echo "$(systemctl status NetworkManager)" >> /puppy/puppy.log
-    nmcli radio wifi on
-    sleep 3s
+    nmcli -w 5 radio wifi on
 fi
 
-if [ "$(nmcli radio wifi)" == "enabled" ] ; then
-    echo "$(date) Puppy successfully ON nmcli radio wifi" >> /puppy/puppy.log
-else
-    echo "$(date) Puppy failed to ON nmcli radio wifi" >> /puppy/puppy.log
+if [ "$(nmcli radio wifi)" == "enabled" ] ; then /puppy/puppy_log.sh "Puppy successfully ON nmcli radio wifi"
+else /puppy/puppy_log.sh "Puppy failed to ON nmcli radio wifi"
 fi
 
-if ! [[ -z "${PUPPY_WIFI1_SSID}" ]]; then
-    if ! [[ -z "${PUPPY_WIFI1_PASS}" ]]; then
-        echo "$(date) Puppy try to connect ${PUPPY_WIFI1_SSID} password ${PUPPY_WIFI1_PASS}" >> /puppy/puppy.log
-        nmcli device wifi connect "${PUPPY_WIFI1_SSID}" password ${PUPPY_WIFI1_PASS}
-    else
-        echo "$(date) Puppy try to connect ${PUPPY_WIFI1_SSID}" >> /puppy/puppy.log
-        nmcli device wifi connect "${PUPPY_WIFI1_SSID}"
-    fi
-    sleep 1s
-fi
+for i in $(seq 1 5) ; do
 
-if ! [[ $(curl -Is "https://www.google.com" | head -n 1) =~ "200" ]] ; then
-    if ! [[ -z "${PUPPY_WIFI2_SSID}" ]]; then
-        if ! [[ -z "${PUPPY_WIFI2_PASS}" ]]; then
-            echo "$(date) Puppy try to connect ${PUPPY_WIFI2_SSID} password ${PUPPY_WIFI2_PASS}" >> /puppy/puppy.log
-            nmcli device wifi connect "${PUPPY_WIFI2_SSID}" password ${PUPPY_WIFI2_PASS}
+    if ! [[ -z "${PUPPY_WIFI1_SSID}" ]] ; then
+        if ! [[ -z "${PUPPY_WIFI1_PASS}" ]] ; then
+            if nmcli -w 5 device wifi connect "${PUPPY_WIFI1_SSID}" password ${PUPPY_WIFI1_PASS} ; then
+                /puppy/puppy_log.sh "Puppy connected to ${PUPPY_WIFI1_SSID} (private)"
+                break
+            else
+                /puppy/puppy_log.sh "Puppy failed to connect to ${PUPPY_WIFI1_SSID} (private)"
+            fi
         else
-            echo "$(date) Puppy try to connect ${PUPPY_WIFI2_SSID}" >> /puppy/puppy.log
-            nmcli device wifi connect "${PUPPY_WIFI2_SSID}"
+            if nmcli -w 5 device wifi connect "${PUPPY_WIFI1_SSID}" ; then
+                /puppy/puppy_log.sh "Puppy connected to ${PUPPY_WIFI1_SSID} (public)"
+                break
+            else
+                /puppy/puppy_log.sh "Puppy failed to connect to ${PUPPY_WIFI1_SSID} (public)"
+            fi
         fi
-        sleep 1s
     fi
-fi
 
-if [[ $(curl -Is "https://www.google.com" | head -n 1) =~ "200" ]] ; then
-    echo "$(date) Puppy successfully connected..." >> /puppy/puppy.log
-else
-    echo "$(date) Puppy failed to connect..." >> /puppy/puppy.log
-fi
+    if ! /puppy/puppy_is_connected.sh ; then
+        if ! [[ -z "${PUPPY_WIFI2_SSID}" ]] ; then
+            if ! [[ -z "${PUPPY_WIFI2_PASS}" ]] ; then
+                if nmcli -w 5 device wifi connect "${PUPPY_WIFI2_SSID}" password ${PUPPY_WIFI2_PASS} ; then
+                    /puppy/puppy_log.sh "Puppy connected to ${PUPPY_WIFI2_SSID} (private)"
+                    break
+                else
+                    /puppy/puppy_log.sh "Puppy failed to connect to ${PUPPY_WIFI2_SSID} (private)"
+                fi
+            else
+                if nmcli -w 5 device wifi connect "${PUPPY_WIFI2_SSID}" ; then
+                    /puppy/puppy_log.sh "Puppy connected to ${PUPPY_WIFI2_SSID} (public)"
+                    break
+                else
+                    /puppy/puppy_log.sh "Puppy failed to connect to ${PUPPY_WIFI2_SSID} (public)"
+                fi
+            fi
+        fi
+    fi
+
+    sleep 1s
+
+done
+
+rm "${PUPPY_CONNECT_LOCK}"
+/puppy/puppy_log.sh "Puppy connect [end]"
+
+exit $(/puppy/puppy_is_connected.sh)
