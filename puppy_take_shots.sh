@@ -7,7 +7,7 @@ WF_NAME="$(date '+%Y-%m-%d_%H-%M-%S')"
 for i in $(seq 1 ${PUPPY_SHOTS_COUNT}); do
     SHOT_FILE_NAME="${WF_NAME}_${i}.jpg"
     /puppy/puppy_log.sh "Puppy get shot ${SHOT_FILE_NAME}"
-    libcamera-still -o "${SHOT_FILE_NAME}" --width 640 --height 480 --nopreview
+    libcamera-still -o "${SHOT_FILE_NAME}" --width 640 --height 480 --nopreview --rotation ${PUPPY_CAMERA_ROTATION}
     sleep 0.5s
 done
 

@@ -36,6 +36,8 @@ PUPPY_SHOTS_COUNT=3
 PUPPY_VIDEO_COUNT=3
 # PUPPY: MAKE VIDEOS
 PUPPY_VIDEO_DURATION_MS=15000
+# PUPPY: ROTATE CAMERA
+PUPPY_CAMERA_ROTATION=180
 
 #==================================================================================================
 
@@ -75,6 +77,7 @@ echo "export PUPPY_TIME_ZONE=\"${PUPPY_TIME_ZONE}\""                        | su
 echo "export PUPPY_SHOTS_COUNT=\"${PUPPY_SHOTS_COUNT}\""                    | sudo tee -a ${ROOTFS_PATH}/puppy/puppy_env.sh
 echo "export PUPPY_VIDEO_COUNT=\"${PUPPY_VIDEO_COUNT}\""                    | sudo tee -a ${ROOTFS_PATH}/puppy/puppy_env.sh
 echo "export PUPPY_VIDEO_DURATION_MS=\"${PUPPY_VIDEO_DURATION_MS}\""        | sudo tee -a ${ROOTFS_PATH}/puppy/puppy_env.sh
+echo "export PUPPY_CAMERA_ROTATION=\"${PUPPY_CAMERA_ROTATION}\""            | sudo tee -a ${ROOTFS_PATH}/puppy/puppy_env.sh
 
 sudo cp *.py ${ROOTFS_PATH}/puppy/
 sudo cp *.sh ${ROOTFS_PATH}/puppy/

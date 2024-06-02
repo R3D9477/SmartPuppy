@@ -39,12 +39,12 @@ if /puppy/puppy_connect.sh ; then
 
     echo "${2}" | mutt -s "${1}" ${3} -- ${PUPPY_DST_EMAIL}
 
-    /puppy/puppy_log.sh "Puppy successfully sent email ${1}"
+    /puppy/puppy_log.sh "Puppy successfully sent email ${1}, files: ${3}"
     rm "${PUPPY_MAIL_LOCK}"
     exit 0
 
 fi
 
-/puppy/puppy_log.sh "Puppy failed to send email ${1}"
+/puppy/puppy_log.sh "Puppy failed to send email ${1}, files: ${3}"
 rm "${PUPPY_MAIL_LOCK}"
 exit 1

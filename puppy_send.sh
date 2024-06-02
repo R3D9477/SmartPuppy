@@ -14,19 +14,17 @@ while true ; do
         let CWN_TO_10s=12
 
         if [ $(ls -1q *.txt | wc -l) -gt 0 ] ; then
-            T_DESCR=$(cat *.txt)
-            if /puppy/puppy_send_email.sh "Puppy said something..." "${T_DESCR}" ; then
-                rm *.txt
-            fi
+            T_FILES=$(ls *.txt)
+            /puppy/puppy_send_email.sh "Puppy said something..." "$(cat ${T_FILES})"
+            rm ${T_FILES}
         fi
 
         if [ $(ls -1q *.jpg | wc -l) -gt 0 ] ; then
-            W_FILES=$(ls *.jpg)
-            /puppy/puppy_log.sh "Puppy send shots ${W_FILES}"
-            AI_DESCR=$(python "/puppy/get_openai_description_from_shots.py" ${W_FILES})
-            if /puppy/puppy_send_email.sh "Puppy saw something..." "${AI_DESCR}" "-a ${W_FILES}" ; then
-                rm ${W_FILES}
-            fi
+            S_FILES=$(ls *.jpg)
+            /puppy/puppy_log.sh "Puppy send shots ${S_FILES}"
+            AI_DESCR=$(python "/puppy/get_openai_description_from_shots.py" ${S_FILES})
+            /puppy/puppy_send_email.sh "Puppy saw something (shots)..." "${AI_DESCR}" "-a ${S_FILES}"
+            rm ${S_FILES}
         fi
 
         if [ $(ls -1q *.h264 | wc -l) -gt 0 ] ; then
@@ -48,12 +46,12 @@ while true ; do
                 else
                     /puppy/puppy_log.sh "Puppy cannot get speech file ${SPEECH_FILE} for ${V_FILE}"
                 fi
-                if /puppy/puppy_send_email.sh "Puppy saw something..." "${AI_DESCR}" "-a ${V_FILE}" ; then
-                    rm ${V_FILE}
-                fi
+                /puppy/puppy_send_email.sh "Puppy saw something (video)..." "${AI_DESCR}" "-a ${V_FILE}"
+                rm ${V_FILE}
             done
+            rm ${V_FILES}
         fi
-    
+
     fi
 
     if [ $CWN_TO_10s -gt 0 ] ; then
